@@ -14,9 +14,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@stellar/stellar-sdk": "^16.2.0",
     "@x402/core": "2.20.0",
     "@x402/stellar": "2.20.0",
-    "dotenv": "17.2.1"
+    "bip39": "^3.1.0",
+    "dotenv": "17.2.1",
+    "ed25519-hd-key": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "24.2.0",

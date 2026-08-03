@@ -2,6 +2,7 @@ import "dotenv/config";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { createEd25519Signer } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
+import { keypairFromRecoveryPhrase } from "./mnemonic.js";
 
 const NETWORK = "stellar:testnet" as const;
 const FACILITATOR_URL = httpUrl(
@@ -11,11 +12,19 @@ const FACILITATOR_URL = httpUrl(
 const JOKE_API_URL = canonicalResourceUrl(
   httpUrl(required("JOKE_API_URL"), "JOKE_API_URL").toString(),
 );
-const BUYER_SECRET_KEY = required("BUYER_SECRET_KEY");
+const BUYER_RECOVERY_PHRASE = required("BUYER_RECOVERY_PHRASE");
+const BUYER_ACCOUNT_INDEX = accountIndex();
 
-const signer = createEd25519Signer(BUYER_SECRET_KEY, NETWORK);
+const buyer = keypairFromRecoveryPhrase(
+  BUYER_RECOVERY_PHRASE,
+  BUYER_ACCOUNT_INDEX,
+  process.env.BUYER_RECOVERY_PASSPHRASE ?? "",
+);
+const signer = createEd25519Signer(buyer.secret(), NETWORK);
 const paymentClient = new x402Client().register(NETWORK, new ExactStellarScheme(signer));
 const httpClient = new x402HTTPClient(paymentClient);
+
+console.log(`Buyer account m/44'/148'/${BUYER_ACCOUNT_INDEX}' derived from the recovery phrase: ${buyer.publicKey()}`);
 
 console.log(`[1/7] Checking seller API: ${new URL("/health", JOKE_API_URL)}`);
 const health = await fetch(new URL("/health", JOKE_API_URL));
@@ -105,9 +114,19 @@ function decodeExtensionResponses(raw: string | null): Record<string, any> | und
   }
 }
 
-function required(name: "JOKE_API_URL" | "BUYER_SECRET_KEY"): string {
+function required(name: "JOKE_API_URL" | "BUYER_RECOVERY_PHRASE"): string {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`${name} is required`);
+  return value;
+}
+
+function accountIndex(): number {
+  const raw = process.env.BUYER_ACCOUNT_INDEX?.trim();
+  if (!raw) return 0;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error("BUYER_ACCOUNT_INDEX must be a non-negative integer");
+  }
   return value;
 }
 

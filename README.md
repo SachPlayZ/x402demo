@@ -4,7 +4,7 @@ A minimal end-to-end x402 demo with two strict boundaries:
 
 ```text
 api/      Railway-deployed seller API; receives payment at SELLER_PAY_TO
-client/   Local buyer; holds BUYER_SECRET_KEY and is never deployed
+client/   Local buyer; holds BUYER_RECOVERY_PHRASE and is never deployed
 ```
 
 The paid `GET /joke` route uses the canonical x402 v2 Express and Stellar SDKs with `exact` payment on `stellar:testnet`. It declares official Bazaar metadata through `@openx402/bazaar-sdk`. After a successful payment, the facilitator automatically catalogs the resource and the client confirms that it is searchable.
@@ -61,10 +61,12 @@ cp .env.example .env
 Fill in:
 
 ```env
-BUYER_SECRET_KEY=S_YOUR_TESTNET_BUYER_SECRET
+BUYER_RECOVERY_PHRASE="your twelve or twenty four word testnet recovery phrase"
 JOKE_API_URL=https://YOUR_DOMAIN/joke
 FACILITATOR_URL=https://facilitator-production-8430.up.railway.app
 ```
+
+The buyer keypair is derived from the recovery phrase with the SEP-0005 path `m/44'/148'/0'`, matching Freighter, Lobstr and the Stellar Laboratory. Set `BUYER_ACCOUNT_INDEX` to use a different account on the same phrase, and `BUYER_RECOVERY_PASSPHRASE` if your wallet uses a BIP-39 passphrase.
 
 Then run:
 
@@ -73,7 +75,7 @@ npm ci
 npm run dev
 ```
 
-The client prints the payment requirements, settlement response, transaction explorer link, protected joke, Bazaar cataloging status, and matching discovery result. It never prints the secret key.
+The client prints the derived buyer address, payment requirements, settlement response, transaction explorer link, protected joke, Bazaar cataloging status, and matching discovery result. It never prints the recovery phrase or the derived secret key.
 
 ## Local Development
 
@@ -97,7 +99,7 @@ For a real payment, `SELLER_PUBLIC_URL` must identify the same public endpoint t
 ## Security Boundaries
 
 - `SELLER_PAY_TO` is a public `G...` or `C...` address; no seller secret is needed by the API.
-- `BUYER_SECRET_KEY` must remain in the local client environment.
+- `BUYER_RECOVERY_PHRASE` must remain in the local client environment. It derives the buyer secret in-process; the secret is never written to disk or logged.
 - `.env` files are ignored recursively and are excluded from Docker builds.
 - The API image copies only `api/`; it cannot contain the client or buyer configuration.
 - The facilitator sponsors network fees but never becomes the payment source.
