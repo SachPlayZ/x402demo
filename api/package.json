@@ -1,0 +1,32 @@
+{
+  "name": "openx402-joke-api",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@openx402/bazaar-sdk": "0.1.0",
+    "@x402/core": "2.20.0",
+    "@x402/express": "2.20.0",
+    "@x402/stellar": "2.20.0",
+    "dotenv": "17.2.1",
+    "express": "5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.3",
+    "@types/node": "24.2.0",
+    "tsx": "4.20.3",
+    "typescript": "5.9.2",
+    "vitest": "3.2.7"
+  }
+}
