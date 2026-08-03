@@ -29,12 +29,22 @@ console.log(`Buyer account m/44'/148'/${BUYER_ACCOUNT_INDEX}' derived from the r
 console.log(`[1/7] Checking seller API: ${new URL("/health", JOKE_API_URL)}`);
 const health = await fetch(new URL("/health", JOKE_API_URL));
 if (!health.ok) throw new Error(`seller health check failed with HTTP ${health.status}`);
+const { paymentsReady } = await health.json() as { paymentsReady?: boolean };
+if (!paymentsReady) {
+  throw new Error(
+    "seller reports paymentsReady=false, so the paid route is disabled. "
+    + "Set SELLER_PAY_TO and SELLER_PUBLIC_URL on the API and redeploy.",
+  );
+}
 console.log(`      Seller is ready on ${NETWORK}.`);
 
 console.log(`[2/7] Requesting ${JOKE_API_URL} without payment.`);
 const unpaid = await fetch(JOKE_API_URL);
 if (unpaid.status !== 402) {
-  throw new Error(`expected HTTP 402, received ${unpaid.status}: ${await unpaid.text()}`);
+  const hint = new URL(JOKE_API_URL).pathname === "/"
+    ? " JOKE_API_URL must include the paid path, for example https://your-domain/joke."
+    : "";
+  throw new Error(`expected HTTP 402, received ${unpaid.status}.${hint} ${await unpaid.text()}`);
 }
 console.log("      Received HTTP 402 Payment Required.");
 
